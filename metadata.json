@@ -1,0 +1,6 @@
+{
+  "name": "EduCraft AI",
+  "description": "An AI-powered platform that transforms PDF documents into comprehensive e-learning courses complete with structured chapters, topics, deep-dive lessons, interactive quizzes, and an integrated AI companion tutor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
