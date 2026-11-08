@@ -58,16 +58,38 @@ export default function CoreLearningViewer({
   const fetchCourseHierarchy = async (selectFirstLesson = true) => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/courses/${courseId}?userId=${userId}`);
-      if (res.ok) {
-        const text = await res.text();
-        const data = JSON.parse(text);
-        setCourse(data.course);
-        setChapters(data.chapters);
+      let foundCourse = null;
+      let foundChapters: Chapter[] = [];
+
+      try {
+        const res = await fetch(`/api/courses/${courseId}?userId=${userId}`);
+        if (res.ok) {
+          const text = await res.text();
+          const data = JSON.parse(text);
+          foundCourse = data.course;
+          foundChapters = data.chapters || [];
+        }
+      } catch (fetchErr) {
+        console.warn('API course hierarchy fetch failed, checking local cache:', fetchErr);
+      }
+
+      // If not from server, check custom courses stored in localStorage
+      if (!foundCourse) {
+        const localCustom = JSON.parse(localStorage.getItem('educraft_custom_courses') || '[]');
+        const match = localCustom.find((c: any) => c.id === courseId);
+        if (match) {
+          foundCourse = match;
+          foundChapters = match.chapters || [];
+        }
+      }
+
+      if (foundCourse) {
+        setCourse(foundCourse);
+        setChapters(foundChapters);
 
         // Auto-expand the first chapter and set active lesson if available
-        if (data.chapters && data.chapters.length > 0) {
-          const firstChapter = data.chapters[0];
+        if (foundChapters && foundChapters.length > 0) {
+          const firstChapter = foundChapters[0];
           setExpandedChapters((prev) => ({ ...prev, [firstChapter.id]: true }));
 
           if (selectFirstLesson && firstChapter.topics && firstChapter.topics.length > 0 && firstChapter.topics[0].lessons && firstChapter.topics[0].lessons.length > 0) {

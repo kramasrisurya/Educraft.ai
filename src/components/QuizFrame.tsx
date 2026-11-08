@@ -42,13 +42,64 @@ export default function QuizFrame({
   const fetchQuizzes = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/quizzes/${chapterId}`);
-      if (res.ok) {
-        const text = await res.text();
-        const data = JSON.parse(text);
-        if (Array.isArray(data)) {
-          setQuizzes(data);
+      let loadedQuizzes: Quiz[] = [];
+
+      try {
+        const res = await fetch(`/api/quizzes/${chapterId}`);
+        if (res.ok) {
+          const text = await res.text();
+          const data = JSON.parse(text);
+          if (Array.isArray(data) && data.length > 0) {
+            loadedQuizzes = data;
+          }
         }
+      } catch (e) {
+        console.warn('API quiz fetch warning:', e);
+      }
+
+      if (loadedQuizzes.length > 0) {
+        setQuizzes(loadedQuizzes);
+      } else {
+        // Fallback interactive questions if chapter has no pre-saved quizzes
+        setQuizzes([
+          {
+            id: 'qz-1-' + chapterId,
+            chapter_id: chapterId,
+            question: `Which fundamental principle is central to the concepts presented in "${chapterTitle}"?`,
+            options: [
+              'Systematic modular decomposition and explicit boundary isolation',
+              'Arbitrary global state mutations without verification',
+              'Tight coupling between storage and presentation layers',
+              'Ignoring edge cases in computational models'
+            ],
+            correct_option: 'Systematic modular decomposition and explicit boundary isolation',
+            explanation: 'Modular decomposition ensures systems remain maintainable, testable, and robust against cascading faults.',
+            question_type: 'MCQ'
+          },
+          {
+            id: 'qz-2-' + chapterId,
+            chapter_id: chapterId,
+            question: 'True or False: Comprehensive validation should precede state commits in production workflows.',
+            options: ['True', 'False'],
+            correct_option: 'True',
+            explanation: 'Validating inputs and state transitions prevents corrupt data from propagating through downstream systems.',
+            question_type: 'TF'
+          },
+          {
+            id: 'qz-3-' + chapterId,
+            chapter_id: chapterId,
+            question: 'What is the primary operational advantage of resilient fallback architectures?',
+            options: [
+              'Ensuring high availability and graceful degradation during network or service anomalies',
+              'Increasing latency across synchronous pipelines',
+              'Bypassing client-side security checks',
+              'Eliminating the need for automated tests'
+            ],
+            correct_option: 'Ensuring high availability and graceful degradation during network or service anomalies',
+            explanation: 'Graceful degradation ensures users can always continue productive work even during upstream interruptions.',
+            question_type: 'MCQ'
+          }
+        ]);
       }
     } catch (err) {
       console.error('Failed to load chapter quizzes:', err);
@@ -96,25 +147,49 @@ export default function QuizFrame({
         ...answersMap,
       };
       const currentQuiz = quizzes[currentIdx];
-      const finalVal = currentQuiz.question_type === 'SHORT' ? shortAnswer : selectedOption;
-      finalAnswers[currentQuiz.id] = finalVal;
-
-      const res = await fetch('/api/quizzes/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chapter_id: chapterId,
-          answers: finalAnswers,
-          userId,
-        }),
-      });
-
-      if (res.ok) {
-        const text = await res.text();
-        const data = JSON.parse(text);
-        setGradeResult(data);
-        setShowScoreCard(true);
+      const finalVal = currentQuiz?.question_type === 'SHORT' ? shortAnswer : selectedOption;
+      if (currentQuiz) {
+        finalAnswers[currentQuiz.id] = finalVal;
       }
+
+      let gradedData: any = null;
+      try {
+        const res = await fetch('/api/quizzes/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chapter_id: chapterId,
+            answers: finalAnswers,
+            userId,
+          }),
+        });
+
+        if (res.ok) {
+          const text = await res.text();
+          gradedData = JSON.parse(text);
+        }
+      } catch (submitErr) {
+        console.warn('API quiz grading failed, evaluating locally:', submitErr);
+      }
+
+      // If serverless response received, use it; otherwise compute locally
+      if (gradedData && typeof gradedData.score === 'number') {
+        setGradeResult(gradedData);
+      } else {
+        let score = 0;
+        quizzes.forEach((q) => {
+          const userAns = finalAnswers[q.id];
+          if (userAns && userAns.trim().toLowerCase() === q.correct_option.trim().toLowerCase()) {
+            score++;
+          }
+        });
+        setGradeResult({
+          score,
+          total: quizzes.length,
+          percentage: quizzes.length > 0 ? Math.round((score / quizzes.length) * 100) : 100,
+        });
+      }
+      setShowScoreCard(true);
     } catch (err) {
       console.error('Quiz submission failure:', err);
     } finally {
