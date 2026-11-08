@@ -41,9 +41,14 @@ export default function App() {
   const fetchUserCourses = async () => {
     try {
       const res = await fetch(`/api/courses?userId=${user?.id}`);
-      const data = await res.json();
       if (res.ok) {
-        setCourses(data);
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            setCourses(data);
+          }
+        } catch {}
       }
     } catch (err) {
       console.error('Failed to query user courses:', err);

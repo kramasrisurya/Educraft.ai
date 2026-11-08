@@ -96,7 +96,7 @@ interface DatabaseSchema {
   chat_history: ChatMessage[];
 }
 
-const DB_FILE = path.join(process.cwd(), 'database.json');
+const DB_FILE = process.env.VERCEL ? path.join('/tmp', 'database.json') : path.join(process.cwd(), 'database.json');
 
 class DatabaseEngine {
   private data: DatabaseSchema = {
