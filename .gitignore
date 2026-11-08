@@ -21,3 +21,5 @@ frontend/.env.local
 !backend/.env.example
 !frontend/.env.local.example
 
+
+database.json

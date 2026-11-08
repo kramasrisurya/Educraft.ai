@@ -59,17 +59,18 @@ export default function CoreLearningViewer({
     try {
       setIsLoading(true);
       const res = await fetch(`/api/courses/${courseId}?userId=${userId}`);
-      const data = await res.json();
       if (res.ok) {
+        const text = await res.text();
+        const data = JSON.parse(text);
         setCourse(data.course);
         setChapters(data.chapters);
 
         // Auto-expand the first chapter and set active lesson if available
-        if (data.chapters.length > 0) {
+        if (data.chapters && data.chapters.length > 0) {
           const firstChapter = data.chapters[0];
           setExpandedChapters((prev) => ({ ...prev, [firstChapter.id]: true }));
 
-          if (selectFirstLesson && firstChapter.topics.length > 0 && firstChapter.topics[0].lessons.length > 0) {
+          if (selectFirstLesson && firstChapter.topics && firstChapter.topics.length > 0 && firstChapter.topics[0].lessons && firstChapter.topics[0].lessons.length > 0) {
             setActiveLesson(firstChapter.topics[0].lessons[0]);
           }
         }
@@ -84,9 +85,12 @@ export default function CoreLearningViewer({
   const fetchChatHistory = async () => {
     try {
       const res = await fetch(`/api/chat/history?course_id=${courseId}&userId=${userId}`);
-      const data = await res.json();
       if (res.ok) {
-        setChatMessages(data);
+        const text = await res.text();
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          setChatMessages(data);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch chat logs:', err);
@@ -144,13 +148,17 @@ export default function CoreLearningViewer({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: textToSend, course_id: courseId, userId }),
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        const text = await res.text();
+        data = JSON.parse(text);
+      } catch {}
 
       if (res.ok) {
         // Overwrite temp / just pull full server synced logs
         fetchChatHistory();
       } else {
-        throw new Error(data.error);
+        throw new Error(data?.error || 'Chat request failed');
       }
     } catch (err: any) {
       console.error('Chat companion error:', err);

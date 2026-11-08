@@ -43,9 +43,12 @@ export default function QuizFrame({
     try {
       setIsLoading(true);
       const res = await fetch(`/api/quizzes/${chapterId}`);
-      const data = await res.json();
       if (res.ok) {
-        setQuizzes(data);
+        const text = await res.text();
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          setQuizzes(data);
+        }
       }
     } catch (err) {
       console.error('Failed to load chapter quizzes:', err);
@@ -106,8 +109,9 @@ export default function QuizFrame({
         }),
       });
 
-      const data = await res.json();
       if (res.ok) {
+        const text = await res.text();
+        const data = JSON.parse(text);
         setGradeResult(data);
         setShowScoreCard(true);
       }

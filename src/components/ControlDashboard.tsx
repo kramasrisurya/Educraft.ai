@@ -123,10 +123,16 @@ export default function ControlDashboard({
         body: formData,
       });
 
-      const data = await response.json();
+      let data: any = null;
+      try {
+        const text = await response.text();
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.warn('Response parsing warning:', parseError);
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate course.');
+      if (!response.ok || !data?.course_id) {
+        throw new Error(data?.error || `Generation failed (HTTP ${response.status}). Please try again.`);
       }
 
       setUploadProgressPercent(100);

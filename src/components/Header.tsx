@@ -43,10 +43,13 @@ export default function Header({ user, onLogout, onNavigateToCourse, coursesCoun
       setIsSearching(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&userId=${user.id}`);
-        const data = await res.json();
         if (res.ok) {
-          setSearchResults(data);
-          setShowDropdown(true);
+          const text = await res.text();
+          const data = JSON.parse(text);
+          if (Array.isArray(data)) {
+            setSearchResults(data);
+            setShowDropdown(true);
+          }
         }
       } catch (err) {
         console.error('Failed to query fuzzy search:', err);
