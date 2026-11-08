@@ -1,4 +1,4 @@
-import { db } from '../src/db/db.ts';
+import { db } from './_db.js';
 
 export default function handler(req: any, res: any) {
   if (req.method !== 'GET') {

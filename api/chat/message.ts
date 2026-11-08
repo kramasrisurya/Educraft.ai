@@ -1,4 +1,4 @@
-import { db } from '../../src/db/db.ts';
+import { db } from '../_db.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -49,7 +49,6 @@ ${prompt}`,
     }
 
     if (!aiMessage) {
-      // High quality educational assistant reply
       const normalizedPrompt = prompt.toLowerCase();
       if (normalizedPrompt.includes('summary') || normalizedPrompt.includes('summarize')) {
         aiMessage = `### Module Overview & Key Concepts\n\nHere is a synthesized breakdown of the core material in this course:\n\n* **Foundational Architecture**: Focuses on core primitives, systematic separation of concerns, and reliable workflow design.\n* **Operational Mechanics**: Emphasizes continuous feedback loops, strict input validation, and decoupled modular boundaries.\n* **Production Best Practices**: Recommends data-driven telemetry, automated health probes, and gradual tuning over premature complexity.\n\nWould you like to delve deeper into any specific section or take a practice quiz?`;

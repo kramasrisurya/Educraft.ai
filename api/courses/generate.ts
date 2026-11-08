@@ -1,4 +1,4 @@
-import { db } from '../../src/db/db.ts';
+import { db } from '../_db.js';
 
 export const config = {
   api: {
@@ -48,7 +48,6 @@ export default async function handler(req: any, res: any) {
     });
   } catch (error: any) {
     console.error('Course generation failed:', error);
-    // Even if an unexpected error occurs, provide a safe fallback so upload NEVER crashes
     try {
       const fallbackCourse = db.synthesizeCourse('Educational Study Guide', req.query?.userId || 'default-user-id');
       return res.status(200).json({
