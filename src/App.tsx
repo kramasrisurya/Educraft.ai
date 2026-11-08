@@ -40,16 +40,21 @@ export default function App() {
 
   const fetchUserCourses = async () => {
     try {
+      let serverCourses: Course[] = [];
       const res = await fetch(`/api/courses?userId=${user?.id}`);
       if (res.ok) {
         const text = await res.text();
         try {
           const data = JSON.parse(text);
           if (Array.isArray(data)) {
-            setCourses(data);
+            serverCourses = data;
           }
         } catch {}
       }
+      // Merge with locally persisted custom courses
+      const localCustom = JSON.parse(localStorage.getItem('educraft_custom_courses') || '[]');
+      const merged = [...localCustom, ...serverCourses.filter(sc => !localCustom.some((lc: any) => lc.id === sc.id))];
+      setCourses(merged.length > 0 ? merged : serverCourses);
     } catch (err) {
       console.error('Failed to query user courses:', err);
     }

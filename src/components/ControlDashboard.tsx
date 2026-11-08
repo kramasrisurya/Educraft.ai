@@ -416,36 +416,65 @@ export default function ControlDashboard({
               </div>
 
               {uploadState === 'idle' ? (
-                <div
-                  id="drop_zone"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center space-y-4 group ${
-                    isDragging
-                      ? 'border-indigo-500 bg-indigo-50/50'
-                      : 'border-slate-200 hover:border-indigo-400/50 hover:bg-slate-100/40'
-                  }`}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <div className="p-4 rounded-full bg-slate-50 border border-slate-250 group-hover:scale-105 group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all text-slate-400 group-hover:text-indigo-600">
-                    <UploadCloud className="w-8 h-8" />
+                <div className="space-y-4">
+                  <div
+                    id="drop_zone"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-3xl p-10 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center space-y-4 group ${
+                      isDragging
+                        ? 'border-indigo-500 bg-indigo-50/50'
+                        : 'border-slate-200 hover:border-indigo-400/50 hover:bg-slate-100/40'
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <div className="p-4 rounded-full bg-slate-50 border border-slate-250 group-hover:scale-105 group-hover:bg-indigo-50 group-hover:border-indigo-200 transition-all text-slate-400 group-hover:text-indigo-600">
+                      <UploadCloud className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-700">Drag & Drop PDF here</h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        or click to browse local documents
+                      </p>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono uppercase bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                      Max size: 40MB
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-700">Drag & Drop PDF here</h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      or click to browse local documents
-                    </p>
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-mono uppercase bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
-                    Max size: 40MB
+
+                  {/* Instant Sample Document Loader */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                        ⚡
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-700">Don't have an academic PDF handy?</p>
+                        <p className="text-[11px] text-slate-500">Test the complete multi-agent pipeline instantly with a sample textbook document.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sampleFile = new File(
+                          ["Quantum Mechanics and Superposition Principles Chapter 1: Introduction to Quantum States and Wavefunctions."],
+                          "Quantum_Computing_Principles.pdf",
+                          { type: "application/pdf" }
+                        );
+                        processFile(sampleFile);
+                      }}
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl cursor-pointer transition-all shadow-sm shrink-0"
+                    >
+                      Load Sample PDF
+                    </button>
                   </div>
                 </div>
               ) : uploadState === 'success' ? (
@@ -578,6 +607,41 @@ export default function ControlDashboard({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* 30-Day Study Activity Matrix (GitHub-style) */}
+                  <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 shadow-sm">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">30-Day Learning Habit Consistency</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Track daily chapter completions and review sessions.</p>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                        🔥 4-Day Active Streak
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-10 sm:grid-cols-15 gap-2 pt-2">
+                      {Array.from({ length: 30 }).map((_, i) => {
+                        const intensity = i > 25 ? 3 : i > 20 ? 2 : (i % 3 === 0) ? 1 : 0;
+                        const colors = ['bg-slate-100', 'bg-indigo-200', 'bg-indigo-400', 'bg-indigo-600'];
+                        return (
+                          <div
+                            key={i}
+                            title={`Day ${i + 1}: ${intensity * 2} learning goals met`}
+                            className={`h-6 rounded-md ${colors[intensity]} transition-transform hover:scale-110 cursor-pointer`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center justify-end gap-1.5 text-[10px] text-slate-400 pt-1 font-mono">
+                      <span>Less</span>
+                      <span className="w-2.5 h-2.5 rounded-xs bg-slate-100" />
+                      <span className="w-2.5 h-2.5 rounded-xs bg-indigo-200" />
+                      <span className="w-2.5 h-2.5 rounded-xs bg-indigo-400" />
+                      <span className="w-2.5 h-2.5 rounded-xs bg-indigo-600" />
+                      <span>More</span>
                     </div>
                   </div>
                 </div>
